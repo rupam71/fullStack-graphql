@@ -1,5 +1,5 @@
 const {projects, clients} = require('../sampleData.js')
-const { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLSchema, GraphQLList } = require('graphql')
+const { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLSchema, GraphQLList, GraphQLNonNull } = require('graphql')
 const Project = require('../models/Project.js')
 const Client = require('../models/Client.js')
 
@@ -70,6 +70,41 @@ const RootQuery = new GraphQLObjectType({
     }
 })
 
+// Mutations
+const RootMutation = new GraphQLObjectType({
+    name:'Mutation',
+    fields: {
+        addCliet: {
+            type: ClientType,
+            args: {
+                name: {type: GraphQLNonNull(GraphQLString)},
+                email: {type: GraphQLNonNull(GraphQLString)},
+                phone: {type: GraphQLNonNull(GraphQLString)},
+            },
+            resolve(parent, args){
+                const client = new Client({ //creating from mongoose query
+                    name: args.name,
+                    email: args.email,
+                    phone: args.phone,
+                })
+
+                return client.save();
+            }
+        },
+        // Delete Client
+        deleteClient: {
+            type: ClientType,
+            args: {
+                id: {type: GraphQLNonNull(GraphQLID)}
+            },
+            resolve(parent, args){
+                return Client.findByIdAndRemove(args.id)
+            }
+        }
+    }
+})
+
 module.exports = new GraphQLSchema({
     query: RootQuery,
+    mutation: RootMutation
 })
